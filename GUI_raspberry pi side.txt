@@ -1,0 +1,35 @@
+import socket
+import rospy
+from std_msgs.msg import Int32
+from smbus import SMBus
+rospy.init_node('GUI')
+pub = rospy.Publisher('subscribe' , Int32 , queue_size=10)
+
+
+HOST = '192.168.43.203'  # Raspberry Pi IP address
+PORT = 55000  # Port number for communication
+
+with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+    s.bind((HOST, PORT))
+    s.listen()
+    conn, addr = s.accept()
+    with conn:
+        print('Connected by', addr)
+        while True:
+            data = conn.recv(1024)  # Receive data from the laptop
+            if not data:
+                break
+            print('Received:', data.decode())
+            x = int (data.decode())
+            if (x == 2):
+                pub.publish(2)
+            if (x == 3):
+                pub.publish(3)
+            if (x == 4):
+                pub.publish(4)
+            if (x == 5):
+                pub.publish(5)
+            if (x == 6):
+                pub.publish(6)
+            if (x == 7):
+                pub.publish(7)

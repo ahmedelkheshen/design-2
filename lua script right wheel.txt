@@ -1,0 +1,20 @@
+function speed_callback(msg)
+    commandedVelocity = msg.data
+end
+function sysCall_init()
+    commandedVelocity = 0.0
+    jointHandle = sim.getObject('.')
+    publisher=simROS.advertise('right_motor/actual_speed','std_msgs/Float32')
+    subscriber=simROS.subscribe('right_motor/setpoint_speed','std_msgs/Float32', 'speed_callback')
+end
+function sysCall_actuation()
+    sim.setJointTargetVelocity(jointHandle, commandedVelocity)
+end
+function sysCall_sensing()
+    actualJointSpeed = sim.getJointVelocity(jointHandle)
+    simROS.publish(publisher, {data=actualJointSpeed})
+end
+function sysCall_cleanup()
+    simROS.shutdownPublisher(publisher)
+    simROS.shutdownSubscriber(subscriber)
+end

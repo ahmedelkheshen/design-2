@@ -1,0 +1,25 @@
+function sysCall_init()
+    sensorHandle = sim.getObject('.')
+    publisher = simROS.advertise('rightvision_sensor/state','std_msgs/Float32')
+end
+
+function sysCall_actuation()
+    -- put your actuation code here
+end
+
+function sysCall_sensing()
+    local result, Packet1, Packet2, Packet3 = sim.readVisionSensor(sensorHandle)
+    --value = sim.handleVisionSensor(sensorHandle)
+    data1 = Packet1[11]
+    if data1 < 0.1 then
+        data1 = 0
+        else
+        data1 = 1
+    end
+    simROS.publish(publisher, {data = data1})
+    --print(data1)
+end
+
+function sysCall_cleanup()
+    simROS.shutdownPublisher(publisher)
+end

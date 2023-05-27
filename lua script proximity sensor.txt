@@ -1,0 +1,14 @@
+function sysCall_init()
+    sensorHandle = sim.getObject('.')
+    publisher=simROS.advertise('proximity_sensor/state','std_msgs/Int32')
+end
+function sysCall_actuation()
+-- put your actuation code here
+end
+function sysCall_sensing()
+    proximitySensorValue = sim.readProximitySensor(sensorHandle)
+    simROS.publish(publisher, {data=proximitySensorValue})
+end
+function sysCall_cleanup()
+    simROS.shutdownPublisher(publisher)
+end

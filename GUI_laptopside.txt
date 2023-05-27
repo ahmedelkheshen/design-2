@@ -1,0 +1,190 @@
+import sys
+from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QToolButton, QWidget, QLabel
+from PyQt5.QtCore import QTimer
+from PyQt5.QtGui import QImage, QPixmap, QFont
+from PyQt5 import QtCore, QtGui, QtWidgets 
+import time 
+#import cv2
+#from PIL import ImageQt
+import socket
+
+class MainWindow(QMainWindow):
+    def _init_(self):
+        super()._init_()
+        self.setWindowTitle("Raspberry Pi Connection")
+        self.resize(400, 400)  # Set window size
+        self.new_window = None  # Reference to the new window instance
+        
+        layout = QVBoxLayout()
+
+        self.setStyleSheet("background-color: white")
+        self.setStyleSheet("border: 2px solid red;")
+
+        heading = QLabel(self)
+        heading.setText("Welcome to lawnmower robot app")
+        heading.setGeometry(10, 20, 400,50) 
+        heading.setStyleSheet("background-color: white; color: black;")  # Set button background color and text color
+        heading.setStyleSheet("border: 2px white;")
+        heading.setFont(QFont("Arial", 15))  # Set the font
+        
+        button1 = QToolButton(self)
+        button1.setText("Start")
+        button1.setStyleSheet("background-color: blue; color: white;")  # Set button background color and text color
+        button1.setGeometry(150, 100, 100,50)
+        button1.clicked.connect(self.open_new_window)
+        layout.addWidget(button1)
+        
+        button2 = QToolButton(self)
+        button2.setText("exit")
+        button2.setStyleSheet("background-color: green; color: white;")  # Set button background color and text color
+        button2.setGeometry(150, 250, 100,50)
+        button2.clicked.connect(self.exit)
+        layout.addWidget(button2)
+
+        self.host = '192.168.43.203'  # Raspberry Pi IP address
+        self.port = 55000  # Port number for communication
+        self.socket = None
+
+    def connect_to_raspberry_pi(self):
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.socket.connect((self.host, self.port))
+        print("Connected to Raspberry Pi")
+        self.socket.sendall("start".encode())  # Send a start message to Raspberry Pi
+        print("Start message sent to Raspberry Pi")
+    
+
+        
+    #    self.socket.close()
+
+    def open_new_window(self):
+        
+        if not self.new_window:  # Create a new window only if it doesn't exist
+            self.new_window = NewWindow()
+            self.new_window.show()
+        
+    def exit(self):
+        if not self.socket:
+            self.connect_to_raspberry_pi()
+        print("Connected to Raspberry Pi")
+
+        self.socket.sendall("exit".encode())  # Send a stop message to Raspberry Pi
+        print("exit message sent to Raspberry Pi")
+        self.close()
+        self.socket.close()
+        sys.exit(app.exec_())
+
+class NewWindow(QMainWindow):
+    def _init_(self):
+        super()._init_()
+        self.setWindowTitle("New Window")
+        self.resize(600, 800)
+
+        layout = QVBoxLayout()
+        self.setStyleSheet("background-color: white")
+        self.setStyleSheet("border: 2px solid red;")
+
+        heading = QLabel(self)
+        heading.setText("choose your cutting level?")
+        heading.setGeometry(10, 20, 400,50) 
+        heading.setStyleSheet("background-color: white; color: black;")  # Set button background color and text color
+        heading.setStyleSheet("border: 2px white;")
+        heading.setFont(QFont("Arial", 15))  # Set the font
+        
+        heading2 = QLabel(self)
+        heading2.setText("start cutting?")
+        heading2.setGeometry(10, 200, 400,50) 
+        heading2.setStyleSheet("background-color: white; color: black;")  # Set button background color and text color
+        heading2.setStyleSheet("border: 2px white;")
+        heading2.setFont(QFont("Arial", 15))  # Set the font
+
+        heading2 = QLabel(self)
+        heading2.setText("start moving?")
+        heading2.setGeometry(10, 350, 400,50) 
+        heading2.setStyleSheet("background-color: white; color: black;")  # Set button background color and text color
+        heading2.setStyleSheet("border: 2px white;")
+        heading2.setFont(QFont("Arial", 15))  # Set the font
+
+        level1 = QToolButton(self)
+        level1.setText("level 1")
+        level1.setStyleSheet("background-color: blue; color: white;")  # Set button background color and text color
+        layout.addWidget(level1)
+        level1.setGeometry(150, 100, 100,50)
+
+        level2 = QToolButton(self)
+        level2.setText("level 2")
+        level2.setStyleSheet("background-color: blue; color: white;")  # Set button background color and text color
+        layout.addWidget(level2)
+        level2.setGeometry(350, 100, 100,50)
+
+        motor = QToolButton(self)
+        motor.setText("start cutting")
+        motor.setStyleSheet("background-color: blue; color: white;")  # Set button background color and text color
+        layout.addWidget(motor)
+        motor.setGeometry(150, 250, 100,50)
+
+        motor1 = QToolButton(self)
+        motor1.setText("stop cutting")
+        motor1.setStyleSheet("background-color: blue; color: white;")  # Set button background color and text color
+        layout.addWidget(motor1)
+        motor1.setGeometry(350, 250, 100,50)
+
+        button3 = QToolButton(self)
+        button3.setText("exit")
+        button3.setStyleSheet("background-color: green; color: white;")  # Set button background color and text color
+        button3.setGeometry(250, 650, 100,50)
+        layout.addWidget(button3)
+
+        move = QToolButton(self)
+        move.setText("move")
+        move.setStyleSheet("background-color: green; color: white;")  # Set button background color and text color
+        move.setGeometry(150, 450, 100,50)
+        layout.addWidget(move)
+
+        stop = QToolButton(self)
+        stop.setText("stop")
+        stop.setStyleSheet("background-color: green; color: white;")  # Set button background color and text color
+        stop.setGeometry(350, 450, 100,50)
+        layout.addWidget(stop)
+
+        level1.clicked.connect(lambda: self.send_integer_message(2))
+        level2.clicked.connect(lambda: self.send_integer_message(3))
+        motor.clicked.connect(lambda: self.send_integer_message(4))
+        motor1.clicked.connect(lambda: self.send_integer_message(5))
+        move.clicked.connect(lambda: self.send_integer_message(6))
+        stop.clicked.connect(lambda: self.send_integer_message(7))
+        button3.clicked.connect(self.exit)
+        
+        self.host = '192.168.43.203'  # Raspberry Pi IP address
+        self.port = 55000  # Port number for communication
+        self.socket = None
+
+    def connect_to_raspberry_pi(self):
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.socket.connect((self.host, self.port))
+        print("Connected to Raspberry Pi")
+    
+    def exit(self):
+        if not self.socket:
+            self.connect_to_raspberry_pi()
+        print("Connected to Raspberry Pi")
+
+        self.socket.sendall("exit".encode())  # Send a stop message to Raspberry Pi
+        print("Stop message sent to Raspberry Pi")
+        self.close()
+        self.socket.close()
+        sys.exit(app.exec_())
+    
+    def send_integer_message(self, value):
+        if not self.socket:
+            self.connect_to_raspberry_pi()
+        print("Connected to Raspberry Pi")
+
+        self.socket.sendall(str(value).encode())  # Send an integer value to Raspberry Pi
+        print(f"Message sent to Raspberry Pi: {value}")
+
+
+if _name_ == "_main_":
+    app = QApplication(sys.argv)
+    window = MainWindow()
+    window.show()
+    sys.exit(app.exec_())

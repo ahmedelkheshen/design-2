@@ -1,0 +1,11 @@
+function sysCall_init()
+   blade= sim.getObjectHandle("blade_joint")
+end
+
+function sysCall_actuation()
+    sim.setJointTargetVelocity(blade, 100)
+end
+
+function sysCall_sensing()
+    -- put your sensing code here
+end

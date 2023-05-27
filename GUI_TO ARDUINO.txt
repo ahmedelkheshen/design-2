@@ -1,0 +1,37 @@
+import rospy
+from std_msgs.msg import Int32
+
+from smbus import SMBus
+addr = 0x08
+addr2 = 0x12 # uno
+bus = SMBus(1) # indicates /dev/ic2-1
+
+def callback(msg):
+#    global addr
+#    global addr2
+    if msg.data == 2:
+        print("level 1")
+        bus.write_byte(addr2, 2) 
+    elif msg.data == 3:
+        print("level 2")
+        bus.write_byte(addr2, 3) 
+    elif msg.data == 4:
+        print("start cutting")
+        bus.write_byte(addr2, 4) 
+    elif msg.data == 5:
+        print("stop cutting")
+        bus.write_byte(addr2, 5) 
+    elif msg.data == 6:
+        print("moving")
+        bus.write_byte(addr, 6) 
+    elif msg.data == 7:
+        print(" stop moving")
+        bus.write_byte(addr, 7) 
+     
+     
+        
+        
+
+rospy.init_node('green_detection_subscriber')
+sub = rospy.Subscriber('subscribe', Int32, callback)
+rospy.spin()

@@ -1,0 +1,30 @@
+import rospy
+import time
+from std_msgs.msg import Int32
+
+from smbus import SMBus
+
+addr = 0x8 # bus address mega 
+bus = SMBus(1) # indicates /dev/ic2-1
+previous_value = None
+value = None
+
+def callback(msg):
+    global previous_value
+    global value
+    if msg.data == 0:
+        value = 0
+        if previous_value != value:
+            print("Green not detected")
+            bus.write_byte(addr, 0x0)
+            previous_value = value        
+    elif msg.data == 1:
+        value = 1
+        if previous_value != value:
+            print("Green detected")
+            bus.write_byte(addr, 0x1)
+            previous_value = value
+
+rospy.init_node('subscriber')
+sub = rospy.Subscriber('green_detected', Int32, callback)
+rospy.spin()

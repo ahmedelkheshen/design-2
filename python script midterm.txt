@@ -1,0 +1,173 @@
+#!/usr/bin/env python3
+import rospy
+import time
+from std_msgs.msg import Float32
+from std_msgs.msg import Int32
+from sensor_msgs.msg import Image
+from cv_bridge import CvBridge
+import cv2
+
+middlesensor=0
+leftsensor=0
+rightsensor=0
+prox=0
+speed = 1
+RSpeed = 0
+LSpeed = 0
+
+def middle_sensor_callback(data):
+	global middlesensor
+	middlesensor=data.data
+	#print(data.data)
+
+def left_sensor_callback(data):
+	global leftsensor
+	leftsensor=data.data
+	
+	
+def right_sensor_callback(data):
+	global rightsensor
+	rightsensor=data.data
+
+def prox_callback(data):
+	global prox
+	prox=data.data
+	
+def callback(data):
+    try:
+        # Convert ROS Image message to OpenCV image
+        bridge = CvBridge()
+        cv_image = bridge.imgmsg_to_cv2(data, "bgr8")
+        
+        # Display the image
+        cv2.imshow("Camera", cv_image)
+        cv2.waitKey(1)
+    except Exception as e:
+        print(e)
+	
+		
+def listener():
+	
+	while not rospy.is_shutdown():
+		rospy.init_node('listener', anonymous=True) 
+		rospy.Subscriber("/sim_ros_interface/middlevision_sensor/state", Float32, middle_sensor_callback)
+		rospy.Subscriber("/sim_ros_interface/leftvision_sensor/state", Float32, left_sensor_callback)
+		rospy.Subscriber("/sim_ros_interface/rightvision_sensor/state", Float32, right_sensor_callback)
+		rospy.Subscriber("/sim_ros_interface/proximity_sensor/state", Int32, prox_callback)
+		rospy.Subscriber("/camera_read/image_raw", Image, callback)
+		if(prox == 1):
+			RSpeed = 0
+			LSpeed = 0
+		else:
+			if(middlesensor==0 and leftsensor==0 and rightsensor==0):	
+				RSpeed = 0
+				LSpeed = 0
+				time. sleep(1)
+			if(leftsensor==0 and middlesensor==0 and rightsensor==1):
+				
+				RSpeed = 1.5*speed
+				LSpeed = 0.3*speed
+				time. sleep(1)
+			elif(leftsensor==0 and middlesensor==1 and rightsensor==1):
+				
+				RSpeed = 1.5*speed
+				LSpeed = 0.3*speed
+				time. sleep(1)
+			elif(leftsensor==1 and middlesensor==0 and rightsensor==0):
+				
+				RSpeed = 0.3*speed
+				LSpeed = 1.5*speed
+				time. sleep(1)			
+			elif(leftsensor==1 and middlesensor==1 and rightsensor==0):
+				
+				RSpeed = 0.3*speed
+				LSpeed = 1.5*speed		
+				time. sleep(1)
+			elif(leftsensor==1 and middlesensor==1 and rightsensor==1):
+				
+				RSpeed = -0.5*speed
+				LSpeed = -0.5*speed
+				time. sleep(1)
+			elif(leftsensor==1 and middlesensor==0 and rightsensor==1):
+				
+				RSpeed = 0.5*speed
+				LSpeed = 0.5*speed
+				time. sleep(1)
+					
+
+
+						
+		
+		RSpeed = -RSpeed			
+		print(RSpeed, LSpeed)
+		pubright=rospy.Publisher('/sim_ros_interface/right_motor/setpoint_speed',Float32,queue_size=10)
+		publeft=rospy.Publisher('/sim_ros_interface/left_motor/setpoint_speed',Float32,queue_size=10)
+		pubright.publish(RSpeed)
+		publeft.publish(LSpeed)
+			
+if _name_ =='_main_':
+	listener ()
+
+
+
+
+
+
+Green color detection:
+import cv2
+import numpy as np
+import RPi.GPIO as GPIO
+
+# Define the GPIO pins for the motor control
+motor_pin_1 = 23
+motor_pin_2 = 24
+
+# Define the upper and lower boundaries for the green color
+lower_green = np.array([50, 100, 50])
+upper_green = np.array([100, 255, 100])
+
+# Open the camera stream
+cap = cv2.VideoCapture(0)
+
+# Flag to keep track of whether green color is detected or not
+green_detected = False
+
+# Setup the GPIO pins for the motor control
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(motor_pin_1, GPIO.OUT)
+GPIO.setup(motor_pin_2, GPIO.OUT)
+
+while True:
+    # Read a frame from the camera stream
+    ret, frame = cap.read()
+
+    # Convert the frame to the HSV color space
+    hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+
+    # Create a mask that selects only the green color within the defined range
+    mask = cv2.inRange(hsv, lower_green, upper_green)
+
+    # Apply the mask to the original image
+    res = cv2.bitwise_and(frame, frame, mask=mask)
+
+    # Show the original image and the result
+    cv2.imshow('Original', frame)
+    cv2.imshow('Green', res)
+
+    # Check if any green color is detected
+    if np.any(mask):
+        green_detected = True
+    else:
+        green_detected = False
+        # Stop the motors
+        GPIO.output(motor_pin_1, GPIO.LOW)
+        GPIO.output(motor_pin_2, GPIO.LOW)
+
+    # Exit the program if the 'q' key is pressed
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
+
+# Release the camera, cleanup the GPIO pins, and close all windows
+cap.release()
+GPIO.cleanup()
+cv2.destroyAllWindows()
